@@ -1,11 +1,10 @@
-# projet_taquin
 from random import randrange
 from tkinter import *
 import time 
 
 
 #Source: https://prograide.com/pregunta/32072/la-faon-correcte-de-mettre-en-pause-un-programme-python
-
+#ines
 DELTA=20
 DIST=10
 moving=0
@@ -27,96 +26,12 @@ def multi(orig, empty):
         L.append(pos)
     return L, (dirx, diry)
 
-def anim(item, target, drtn):
-    global moving
-    L =cnv.coords(item)
-    a=L[0]
-    b=L[1]
-    x, y=target
-    u, v=drtn
-    d=u*(x-a)+v*(y-b)
-    if d>DIST:
-        cnv.move(item, u*DIST, v*DIST)
-        cnv.after(DELTA, anim, item, target, drtn)
-    else:
-        cnv.move(item, (x-a), (y-b))
-        moving-=1
-
-def move_tile(orig, dstn, drtn):
-    global moving
-    i, j=orig
-    nro=board[i][j]
-    rect, txt=items[nro]
-    ii, jj =dstn
-    target=100*jj, 100*ii
-    target_txt=100*jj+50, 100*ii+50
-
-    anim(rect, target, drtn)
-    anim(txt, target_txt, drtn)
-    moving+=2
-
-    board[i][j],board[ii][jj]=board[ii][jj], board[i][j]
-
-def congrat():
-    global bravo
-    if not moving:
-        lbl.configure(text="Bravo !")
-        bravo=True
-    else:
-        cnv.after(20, congrat)
-
-
-def clic(event):
-    global i_empty, j_empty
-    if bravo:
-        return
-    i=event.y//100
-    j=event.x//100
-
-    r=multi((i,j), (i_empty, j_empty))
-    if (r is None) or moving:
-        return
-    L, drtn=r
-    for orig, dstn in L:
-        move_tile(orig, dstn, drtn[::-1])
-    i_empty=i
-    j_empty=j
-    if board==win:
-        congrat()
-
-def voisins(n, i, j):
-    return [(a,b) for (a, b) in
-            [(i, j+1),(i, j-1), (i-1, j), (i+1,j)]
-            if a in range(n) and b in range(n)]
-
-def echange(board, empty):
-    i, j=empty
-    V=voisins(4, i, j)
-    ii, jj=V[randrange(len(V))]
-    board[ii][jj], board[i][j]=board[i][j],board[ii][jj]
-    return ii, jj
-
-def normal(board, empty):
-    i_empty, j_empty = empty
-    for i in range(i_empty, 4):
-        (board[i][j_empty], board[i_empty][j_empty])= (
-            board[i_empty][j_empty], board[i][j_empty])
-        i_empty=i
-    for j in range(j_empty, 4):
-        board[i_empty][j], board[i_empty][j_empty]= (
-            board[i_empty][j_empty],board[i_empty][j])
-        j_empty=j
-
 def retour(R):
     pass #(db.rollback())
 
 def pause(): 
     programPause = raw_input("Press the <ENTER> key to continue") 
-
-
-
-
-#Source: https://prograide.com/pregunta/32072/la-faon-correcte-de-mettre-en-pause-un-programme-python
+    pass #fonctionne pas, c'etatait pour mettre la partie en pause
 
 def melanger(N):
     board=[[4*lin+1+col for col in range(4)]
@@ -128,42 +43,44 @@ def melanger(N):
         empty=echange(board, empty)
     return board
 
-def init(N=1000):
-    global i_empty, j_empty, items, board, bravo
-    cnv.delete("all")
-    items=[None]
+#Benjamin
+def genererPlateauRandom() ->list:
 
-    board=melanger(N)
-    for i in range(4):
-        for j in range(4):
-            if board[i][j]==16:
-                i_empty, j_empty=i, j
-    empty=i_empty, j_empty
-    normal(board, empty)
-    i_empty, j_empty=3,3
-    items=[None for i in range(17)]
+    listePlateau=[ k for k in range(1,16)]
 
-    for i in range(4):
-        for j in range(4):
-            x, y=100*j, 100*i
-            A, B, C=(x, y), (x+100, y+100), (x+50, y+50)
-            rect=cnv.create_rectangle(A, B, fill="orange")
-            nro=board[i][j]
-            txt=cnv.create_text(C, text=nro, fill="green",
-                                font=FONT)
-            items[nro]=(rect, txt)
-    rect, txt=items[16]
-    cnv.delete(txt)
-    cnv.delete(rect)
-    lbl.configure(text="")
-    bravo=False
+    shuffle(listePlateau)
 
+    return listePlateau+[0]
 
-win=[[1, 2, 3, 4],
-     [5, 6, 7, 8],
-     [9, 10, 11, 12],
-     [13, 14, 15, 16]]
+def plateauValable(listePlateau:list) ->bool:
 
+    cpt=0
+
+    for i in range(1,16):
+
+        if listePlateau[i-1]!=i:
+
+            n=listePlateau.index(i)
+
+            listePlateau[i-1],listePlateau[n]=listePlateau[n],listePlateau[i-1]
+
+            cpt=cpt+1
+
+    return cpt%2==0
+
+def genererPlateauValable() -> list:
+
+    listePlateau=genererPlateauRandom()
+
+    while not plateauValable(listePlateau.copy()):
+
+        listePlateau=genererPlateauRandom()
+
+    matricePlateau=[listePlateau[:4],listePlateau[4:8],listePlateau[8:12],listePlateau[12:16]]
+
+    return matricePlateau
+
+#ines
 FONT=('Ubuntu', 27, 'bold')
 master=Tk()
 cnv=Canvas(master, width=400, height=400, bg='gray70')
@@ -181,14 +98,5 @@ lbl.pack(side="left")
 cnv.bind("<Button-1>",clic)
 init()
 
-
-    
-
-
 master.mainloop()
-
-print("something") 
-time.sleep(60.0) # pause 5.5 seconds print("something")
-
-btn=Button(text="Enter", command=int)
-btn.pack()
+ 
